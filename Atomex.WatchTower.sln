@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30225.117
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atomex.WatchTower", "Atomex.WatchTower.csproj", "{91C36703-F547-4EC3-A48E-966E9F53E5DA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{91C36703-F547-4EC3-A48E-966E9F53E5DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91C36703-F547-4EC3-A48E-966E9F53E5DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91C36703-F547-4EC3-A48E-966E9F53E5DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91C36703-F547-4EC3-A48E-966E9F53E5DA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CE365800-2D16-40D9-9ADB-D4EBDF67A4EF}
+	EndGlobalSection
+EndGlobal
