@@ -21,6 +21,7 @@ namespace Atomex.WatchTower
                 })
                 .ConfigureServices(services =>
                 {
+                    services.AddHostedService<AccountService>();
                     services.AddHostedService<GuardService>();
                 });
     }
