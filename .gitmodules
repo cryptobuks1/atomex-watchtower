@@ -1,0 +1,3 @@
+[submodule "Atomex.Client.Core"]
+	path = Atomex.Client.Core
+	url = ../atomex.client.core.git
