@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Nethereum.Hex.HexTypes;
 using Newtonsoft.Json.Linq;
 
+using Atomex.EthereumTokens;
 using Atomex.WatchTower.Blockchain.Abstract;
 using Atomex.WatchTower.Blockchain.Ethereum.Erc20.Messages;
 using Atomex.WatchTower.Blockchain.Ethereum.Erc20.Dto;
-using Atomex.EthereumTokens;
 
 namespace Atomex.WatchTower.Blockchain.Ethereum.Erc20
 {
@@ -43,8 +44,10 @@ namespace Atomex.WatchTower.Blockchain.Ethereum.Erc20
             string secretHash,
             string contractAddress = null,
             string address = null,
+            string refundAddress = null,
             ulong timeStamp = 0,
             ulong lockTime = 0,
+            int secretSize = 32,
             CancellationToken cancellationToken = default)
         {
             var contractSettings = _settings.Contracts
@@ -59,8 +62,8 @@ namespace Atomex.WatchTower.Blockchain.Ethereum.Erc20
                 toBlock: ulong.MaxValue,
                 topic0: EventSignatureExtractor.GetSignatureHash<Erc20InitiatedEventDto>(),
                 topic1: "0x" + secretHash,
-                topic2: "0x000000000000000000000000" + _settings.TokenContract.Substring(2),
-                topic3: "0x000000000000000000000000" + address.Substring(2),
+                topic2: "0x000000000000000000000000" + _settings.TokenContract[2..],
+                topic3: "0x000000000000000000000000" + address[2..],
                 cancellationToken: cancellationToken);
 
             if (events == null || !events.Any())

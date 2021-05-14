@@ -38,8 +38,10 @@ namespace Atomex.WatchTower.Blockchain.Abstract
             string secretHash,
             string contractAddress = null,
             string address = null,
+            string refundAddress = null,
             ulong timeStamp = 0,
             ulong lockTime = 0,
+            int secretSize = 32,
             CancellationToken cancellationToken = default)
         {
             foreach (var api in _apis)
@@ -50,8 +52,10 @@ namespace Atomex.WatchTower.Blockchain.Abstract
                         secretHash,
                         contractAddress,
                         address,
+                        refundAddress,
                         timeStamp,
                         lockTime,
+                        secretSize,
                         cancellationToken);
                 }
                 catch (Exception)

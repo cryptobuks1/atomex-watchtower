@@ -4,14 +4,15 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Nethereum.Hex.HexTypes;
 
+using Atomex.Guard.Common;
 using Atomex.WatchTower.Blockchain.Abstract;
 using Atomex.WatchTower.Blockchain.Ethereum.Messages;
 using Atomex.WatchTower.Blockchain.Ethereum.Dto;
-using Atomex.Guard.Common;
 
 namespace Atomex.WatchTower.Blockchain.Ethereum
 {
@@ -166,8 +167,10 @@ namespace Atomex.WatchTower.Blockchain.Ethereum
             string secretHash,
             string contractAddress = null,
             string address = null,
+            string refundAddress = null,
             ulong timeStamp = 0,
             ulong lockTime = 0,
+            int secretSize = 32,
             CancellationToken cancellationToken = default)
         {
             var contractSettings = _settings.Contracts
@@ -182,7 +185,7 @@ namespace Atomex.WatchTower.Blockchain.Ethereum
                 toBlock: ulong.MaxValue,
                 topic0: EventSignatureExtractor.GetSignatureHash<InitiatedEventDto>(),
                 topic1: "0x" + secretHash,
-                topic2: "0x000000000000000000000000" + address.Substring(2),
+                topic2: "0x000000000000000000000000" + address[2..],
                 cancellationToken: cancellationToken);
 
             if (events == null || !events.Any())

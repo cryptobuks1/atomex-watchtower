@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.EntityFrameworkCore;
 
 using Atomex.Contexts;
@@ -113,6 +114,38 @@ namespace Atomex.WatchTower.Services
             using var context = new ExchangeContext(_contextOptions);
 
             context.Parties.Update(party);
+
+            return await context.SaveChangesAsync(cancellationToken) > 0;
+        }
+
+        public async Task<bool> AddSecretAsync(
+            long swapId,
+            string secret,
+            CancellationToken cancellationToken = default)
+        {
+            using var context = new ExchangeContext(_contextOptions);
+
+            var swap = await context.Swaps.FindAsync(
+                keyValues: new object[] { swapId },
+                cancellationToken: cancellationToken);
+
+            swap.Secret = secret;
+
+            return await context.SaveChangesAsync(cancellationToken) > 0;
+        }
+
+        public async Task<bool> UpdatePartyStatusAsync(
+            long partyId,
+            PartyStatus status,
+            CancellationToken cancellationToken = default)
+        {
+            using var context = new ExchangeContext(_contextOptions);
+
+            var party = await context.Parties.FindAsync(
+                keyValues: new object[] { partyId },
+                cancellationToken: cancellationToken);
+
+            party.Status = status;
 
             return await context.SaveChangesAsync(cancellationToken) > 0;
         }

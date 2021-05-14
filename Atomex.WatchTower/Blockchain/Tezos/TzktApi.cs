@@ -6,6 +6,7 @@ using System.Net;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -65,8 +66,10 @@ namespace Atomex.WatchTower.Blockchain.Tezos
             string secretHash,
             string contractAddress = null,
             string address = null,
+            string refundAddress = null,
             ulong timeStamp = 0,
             ulong lockTime = 0,
+            int secretSize = 32,
             CancellationToken cancellationToken = default)
         {
             var contractSettings = _settings.Contracts

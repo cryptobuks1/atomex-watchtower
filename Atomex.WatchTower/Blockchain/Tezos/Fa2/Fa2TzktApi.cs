@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Newtonsoft.Json.Linq;
 
 using Atomex.WatchTower.Blockchain.Abstract;
@@ -31,8 +32,10 @@ namespace Atomex.WatchTower.Blockchain.Tezos.Fa2
             string secretHash,
             string contractAddress = null,
             string address = null,
+            string refundAddress = null,
             ulong timeStamp = 0,
             ulong lockTime = 0,
+            int secretSize = 32,
             CancellationToken cancellationToken = default)
         {
             var contractSettings = _settings.Contracts

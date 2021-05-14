@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Threading;
+
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Hosting;
 
-using Atomex.Common;
-using Atomex.Wallet;
 using Atomex.Abstract;
+using Atomex.Common;
+using Atomex.Swaps;
+using Atomex.Wallet;
 using Atomex.WatchTower.Blockchain.Abstract;
 using Atomex.WatchTower.Entities;
-using Atomex.Swaps;
 
 namespace Atomex.WatchTower.Services
 {
@@ -45,7 +46,8 @@ namespace Atomex.WatchTower.Services
             _account = Account.LoadFromFile(
                 settings.PathToWallet,
                 settings.Password.ToSecureString(),
-                _currenciesProvider);
+                _currenciesProvider,
+                ClientType.Unknown);
 
             Status = WalletStatus.Loading;
         }
@@ -78,7 +80,7 @@ namespace Atomex.WatchTower.Services
                 .GetCurrencies(_account.Network)
                 .GetByName(purchasedCurrency);
 
-            var currencySwap = CurrencySwapCreator.Create(currency, _account, null);
+            var currencySwap = CurrencySwapCreator.Create(currency, _account);
 
             try
             {

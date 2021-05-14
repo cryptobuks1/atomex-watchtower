@@ -14,8 +14,10 @@ namespace Atomex.WatchTower.Blockchain.Abstract
             string secretHash,
             string contractAddress = null,
             string address = null,
+            string refundAddress = null,
             ulong timeStamp = 0,
             ulong lockTime = 0,
+            int secretSize = 32,
             CancellationToken cancellationToken = default);
 
         Task<IEnumerable<BlockchainTransaction>> FindAdditionalLocksAsync(

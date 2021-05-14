@@ -4,6 +4,7 @@ using System.Net;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NBitcoin;
@@ -101,8 +102,10 @@ namespace Atomex.WatchTower.Blockchain.Bitcoin
             string secretHash,
             string contractAddress = null,
             string address = null,
+            string refundAddress = null,
             ulong timeStamp = 0,
             ulong lockTime = 0,
+            int secretSize = 32,
             CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException("InsightApi does not support lock transaction search.");

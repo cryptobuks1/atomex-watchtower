@@ -88,5 +88,13 @@ namespace Atomex.Common
 				return awaiter.TrySetResult(item);
 			}
 		}
+
+		/// <summary>
+		/// Try to return an item from the beginning of the queue without removing it
+		/// </summary>
+		/// <param name="item">Item</param>
+		/// <returns>True if success, otherwise false</returns>
+		public bool TryPeek(out T item) =>
+			_itemQueue.TryPeek(out item);
 	}
 }

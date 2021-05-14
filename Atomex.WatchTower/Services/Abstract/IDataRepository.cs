@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Atomex.WatchTower.Entities;
 
 namespace Atomex.WatchTower.Services.Abstract
@@ -37,6 +38,16 @@ namespace Atomex.WatchTower.Services.Abstract
 
         Task<bool> UpdatePartyAsync(
             Party party,
+            CancellationToken cancellationToken = default);
+
+        Task<bool> AddSecretAsync(
+            long swapId,
+            string secret,
+            CancellationToken cancellationToken = default);
+
+        Task<bool> UpdatePartyStatusAsync(
+            long partyId,
+            PartyStatus status,
             CancellationToken cancellationToken = default);
 
         Task<bool> AddPartyTransactionAsync(
