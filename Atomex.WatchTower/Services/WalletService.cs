@@ -38,28 +38,28 @@ namespace Atomex.WatchTower.Services
             IOptionsMonitor<WalletSettings> settingsMonitor,
             ICurrenciesProvider currenciesProvider)
         {
-            _settingsMonitor = settingsMonitor;
-            _currenciesProvider = currenciesProvider;
+            //_settingsMonitor = settingsMonitor;
+            //_currenciesProvider = currenciesProvider;
 
-            var settings = _settingsMonitor.CurrentValue;
+            //var settings = _settingsMonitor.CurrentValue;
 
-            _account = Account.LoadFromFile(
-                settings.PathToWallet,
-                settings.Password.ToSecureString(),
-                _currenciesProvider,
-                ClientType.Unknown);
+            //_account = Account.LoadFromFile(
+            //    settings.PathToWallet,
+            //    settings.Password.ToSecureString(),
+            //    _currenciesProvider,
+            //    ClientType.Unknown);
 
-            Status = WalletStatus.Loading;
+            //Status = WalletStatus.Loading;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            Task.Run(async () =>
-            {
-                await new HdWalletScanner(_account).ScanAsync();
+            //Task.Run(async () =>
+            //{
+            //    await new HdWalletScanner(_account).ScanAsync();
 
-                Status = WalletStatus.Ready;
-            });
+            //    Status = WalletStatus.Ready;
+            //});
 
             return Task.CompletedTask;
         }

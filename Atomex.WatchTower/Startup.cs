@@ -1,4 +1,5 @@
 using System;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -6,11 +7,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-using Atomex.Abstract;
 using Atomex.Contexts;
 using Atomex.Core;
 using Atomex.WatchTower.Services;
 using Atomex.WatchTower.Services.Abstract;
+using Atomex.Abstract;
 
 namespace Atomex.WatchTower
 {
@@ -40,13 +41,16 @@ namespace Atomex.WatchTower
             var network = Enum.Parse<Network>(Configuration["Network"], true);
 
             var currenciesSettingsSection = Configuration.GetSection("Currencies");
-            services.AddSingleton(services => new CurrenciesProvider(currenciesSettingsSection).GetCurrencies(network));
             services.AddSingleton<ICurrenciesProvider>(services => new CurrenciesProvider(currenciesSettingsSection));
+            services.AddSingleton(services => services.GetService<ICurrenciesProvider>().GetCurrencies(network));
 
             var blockchainSettingsSection = Configuration.GetSection("Blockchain");
             services.Configure<BlockchainSettings>(blockchainSettingsSection);
 
             services.AddSingleton<IBlockchainService, BlockchainService>();
+
+            var trackerSettingsSection = Configuration.GetSection("Tracker");
+            services.Configure<TrackerSettings>(trackerSettingsSection);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

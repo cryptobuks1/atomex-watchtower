@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 
 using Atomex.Abstract;
 using Atomex.Common;
@@ -19,8 +21,8 @@ namespace Atomex.WatchTower.Services
 {
     public class TrackerSettings
     {
-        public bool Sync { get; set; }
         public string ApiToken { get; set; }
+        public string ApiUrl { get; set; }
     }
 
     public class TrackerService : IHostedService
@@ -28,6 +30,7 @@ namespace Atomex.WatchTower.Services
         private const int SwapTimeOutSec = 12 * 60 * 60; // 12 hours
         private const int SwapWaitingIntervalSec = 20;
         private const int UpdateFromDbInterval = 10;
+        private const int UpdateFromServerInterval = 10;
 
         private readonly ILogger<TrackerService> _logger;
         private readonly ILoggerFactory _loggerFactory;
@@ -42,6 +45,8 @@ namespace Atomex.WatchTower.Services
         private readonly AsyncQueue<Swap> _activeSwaps;
         private readonly AsyncQueue<Swap> _failedSwaps;
         private readonly AsyncQueue<(Swap swap, DateTimeOffset timeStamp)> _waitingSwaps;
+
+        private readonly HttpClient _httpClient;
 
         public TrackerService(
             ILoggerFactory loggerFactory,
@@ -64,6 +69,8 @@ namespace Atomex.WatchTower.Services
             _activeSwaps = new AsyncQueue<Swap>();
             _failedSwaps = new AsyncQueue<Swap>();
             _waitingSwaps = new AsyncQueue<(Swap swap, DateTimeOffset timeStamp)>();
+
+            _httpClient = new HttpClient { BaseAddress = new Uri(_settingsMonitor.CurrentValue.ApiUrl) };
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -79,6 +86,7 @@ namespace Atomex.WatchTower.Services
 
             _ = HandleWaitingSwapsAsync(_cts.Token);
             _ = UpdateSwapsFromDbAsync(_cts.Token);
+            _ = UpdateSwapsFromServer(_cts.Token);
 
             return Task.CompletedTask;
         }
@@ -105,7 +113,8 @@ namespace Atomex.WatchTower.Services
             }
         }
 
-        private async Task HandleActiveSwapsAsync(CancellationToken cancellationToken = default)
+        private async Task HandleActiveSwapsAsync(
+            CancellationToken cancellationToken = default)
         {
             try
             {
@@ -114,9 +123,7 @@ namespace Atomex.WatchTower.Services
                     var swap = await _activeSwaps.TakeAsync(cancellationToken);
 
                     // if not sync mode, swap not initiated and timeout reached => skip abandoned swap
-                    if (!_settingsMonitor.CurrentValue.Sync &&
-                        !IsInitiated(swap) &&
-                        IsSwapTimeoutReached(swap))
+                    if (!IsInitiated(swap) && IsSwapTimeoutReached(swap))
                     {
                         _logger.LogDebug("[Tracker] Swap {@id} is abandoned, will not wait any longer", swap.Id);
 
@@ -155,7 +162,8 @@ namespace Atomex.WatchTower.Services
             }
         }
 
-        private async Task HandleWaitingSwapsAsync(CancellationToken cancellationToken = default)
+        private async Task HandleWaitingSwapsAsync(
+            CancellationToken cancellationToken = default)
         {
             try
             {
@@ -257,7 +265,8 @@ namespace Atomex.WatchTower.Services
         private Task<Swap> GetSwap(long id, CancellationToken cancellationToken = default) =>
             _dataRepository.GetSwapAsync(id, cancellationToken);
 
-        private async Task UpdateSwapsFromDbAsync(CancellationToken cancellationToken = default)
+        private async Task UpdateSwapsFromDbAsync(
+            CancellationToken cancellationToken = default)
         {
             try
             {
@@ -293,6 +302,101 @@ namespace Atomex.WatchTower.Services
             finally
             {
                 _logger.LogDebug("[Tracker] Swaps updating stopped.");
+            }
+        }
+
+        private async Task UpdateSwapsFromServer(
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                const int limit = 100;
+                var lastSwapId = 0L;
+                var apiToken = _settingsMonitor.CurrentValue.ApiToken;
+
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    var response = await _httpClient
+                        .GetAsync($"v1/tracker/swaps?active=true&limit={limit}&apiToken={apiToken}");
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(UpdateFromServerInterval), cancellationToken);
+                        continue;
+                    }
+
+                    var jsonContent = await response
+                        .Content
+                        .ReadAsStringAsync();
+
+                    var swaps = JsonConvert
+                        .DeserializeObject<List<Swap>>(jsonContent)
+                        .Reverse<Swap>();
+
+                    foreach (var swap in swaps)
+                    {
+                        if (swap.Id < lastSwapId)
+                            continue;
+
+                        lastSwapId = Math.Max(lastSwapId, swap.Id);
+
+                        var existSwap = await _dataRepository
+                            .GetSwapAsync(swap.Id, cancellationToken);
+
+                        if (existSwap != null)
+                            continue;
+
+                        var newSwap = new Swap
+                        {
+                            Id         = swap.Id,
+                            Symbol     = swap.Symbol,
+                            TimeStamp  = swap.TimeStamp,
+                            Price      = swap.Price,
+                            Qty        = swap.Qty,
+                            SecretHash = swap.SecretHash,
+                            
+                            Initiator  = new Party
+                            {
+                                Requisites = swap.Initiator.Requisites,
+                                Side       = swap.Initiator.Side,
+                                Status     = swap.Initiator.Status == PartyStatus.Created || swap.Initiator.Status == PartyStatus.Involved
+                                    ? swap.Initiator.Status
+                                    : PartyStatus.Involved,
+                            },
+                            Acceptor = new Party
+                            {
+                                Requisites = swap.Acceptor.Requisites,
+                                Side       = swap.Acceptor.Side,
+                                Status     = swap.Acceptor.Status == PartyStatus.Created || swap.Acceptor.Status == PartyStatus.Involved
+                                    ? swap.Acceptor.Status
+                                    : PartyStatus.Involved
+                            },
+
+                            BaseCurrencyContract  = swap.BaseCurrencyContract,
+                            QuoteCurrencyContract = swap.QuoteCurrencyContract,
+                            OldId                 = swap.OldId
+                        };
+
+                        newSwap.Initiator.InitiatorSwap = newSwap;
+                        newSwap.Acceptor.AcceptorSwap = newSwap;
+
+                        await _dataRepository.AddSwapAsync(newSwap, cancellationToken);
+                    }
+
+                    await Task.Delay(TimeSpan.FromSeconds(UpdateFromServerInterval), cancellationToken);
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                // nothing to do
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[Tracker] Error updating swaps from server.");
+            }
+            finally
+            {
+                _logger.LogDebug("[Tracker] Swaps updating from server stopped.");
             }
         }
 

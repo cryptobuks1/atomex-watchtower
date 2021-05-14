@@ -190,7 +190,7 @@ namespace Atomex.WatchTower.Blockchain.Ethereum
 
             if (events == null || !events.Any())
                 return null;
-
+            
             if (!(await GetTransactionAsync(events.First().HexTransactionHash, cancellationToken) is EthereumTransaction lockTx))
                 return null;
 
@@ -202,30 +202,13 @@ namespace Atomex.WatchTower.Blockchain.Ethereum
             return lockTx;
         }
 
-        public virtual async Task<IEnumerable<BlockchainTransaction>> FindAdditionalLocksAsync(
+        public virtual Task<IEnumerable<BlockchainTransaction>> FindAdditionalLocksAsync(
             string secretHash,
             string contractAddress = null,
             bool useCacheOnly = false,
             CancellationToken cancellationToken = default)
         {
-            var contractSettings = _settings.Contracts
-                .FirstOrDefault(s => s.Address.Equals(contractAddress, StringComparison.OrdinalIgnoreCase));
-
-            if (contractSettings == null)
-                throw new Exception($"Unknown contract address {contractAddress}");
-
-            var events = await GetContractEventsAsync(
-                address: contractAddress,
-                fromBlock: contractSettings.StartBlock,
-                toBlock: ulong.MaxValue,
-                topic0: EventSignatureExtractor.GetSignatureHash<AddedEventDto>(),
-                topic1: "0x" + secretHash,
-                cancellationToken: cancellationToken);
-
-            if (events == null || !events.Any())
-                return Enumerable.Empty<BlockchainTransaction>();
-
-            return await Task.WhenAll(events.Select(e => GetTransactionAsync(e.HexTransactionHash, cancellationToken)));
+            return Task.FromResult(Enumerable.Empty<BlockchainTransaction>());
         }
 
         public virtual async Task<BlockchainTransaction> FindRedeemAsync(

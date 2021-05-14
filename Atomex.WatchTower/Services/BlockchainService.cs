@@ -64,7 +64,7 @@ namespace Atomex.WatchTower.Services
             if (settings.TzBtc != null)
                 _blockchainApi.Add("TZBTC", new Fa12Api("TZBTC", currenciesProvider, settings.TzBtc));
 
-            if (settings.TzBtc != null)
+            if (settings.Kusd != null)
                 _blockchainApi.Add("KUSD", new Fa12Api("KUSD", currenciesProvider, settings.Kusd));
 
             if (settings.Fa2 != null)
